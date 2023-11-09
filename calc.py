@@ -54,7 +54,7 @@ def animate(i):
     return line,
 
 # アニメーションを作成
-ani = FuncAnimation(fig, animate, init_func=init, frames=1000, interval=0.01, blit=True)
+ani = FuncAnimation(fig, animate, init_func=init, frames=1000, interval=0.001, blit=True)
 
 # プロットの設定
 plt.xlim(-50000, 50000)
