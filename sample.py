@@ -31,23 +31,39 @@ earth = canvas.create_image(400, 700,image=earth_img, tag="earth")
 rocket_x = 400
 rocket_y = 300
 
+missile_vel_x = 60
+missile_vel_y = 0
+missile_mod_vel_x = 60
+missile_mod_vel_y = 0
+
 # ロケットのグラフィック
 rocket_img = tk.PhotoImage(file="satellite.png").subsample(3,3)
 rocket = canvas.create_image(rocket_x, rocket_y,image=rocket_img, tag="sat")
 
+arrow = canvas.create_line(rocket_x, rocket_y,rocket_x+missile_vel_x,rocket_y+missile_vel_y,arrow=tk.LAST,fill="red", width=5)
+
 # キーボードの入力を受け付けるための関数
 def move_rocket(event):
-    global rocket_x
+    global rocket_x,missile_vel_x,missile_vel_y
     if event.keysym == "Left" and rocket_x > 20 and flag_input :
         rocket_x -= 10
     elif event.keysym == "Right" and rocket_x < 780 and flag_input:
         rocket_x += 10
+    elif event.keysym == "Down" and flag_input:
+        missile_vel_x = missile_vel_x*math.cos(2*math.pi * 15 / 360) - math.sin(2*math.pi * 15 / 360)*missile_vel_y
+        missile_vel_y = missile_vel_x*math.sin(2*math.pi * 15 / 360) + math.cos(2*math.pi * 15 / 360)*missile_vel_y
+    elif event.keysym == "Up" and flag_input:
+        missile_vel_x = missile_vel_x*math.cos(-2*math.pi * 15 / 360) - math.sin(-2*math.pi * 15 / 360)*missile_vel_y
+        missile_vel_y = missile_vel_x*math.sin(-2*math.pi * 15 / 360) + math.cos(-2*math.pi * 15 / 360)*missile_vel_y
     canvas.coords(rocket, rocket_x ,rocket_y )
+    canvas.coords(arrow,rocket_x, rocket_y,rocket_x+missile_vel_x,rocket_y+missile_vel_y)
 
 # キーボードの入力をウィンドウにバインド
 # bind() でキーボード押下などのイベントを取得
 window.bind("<Left>", move_rocket)
 window.bind("<Right>", move_rocket)
+window.bind("<Up>", move_rocket)
+window.bind("<Down>", move_rocket)
 
 # デブリの初期位置
 debris_x = 0
@@ -81,8 +97,6 @@ def animate_debris():
 # ミサイルに関するパラメータの初期化
 missile_pos_x = 0 
 missile_pos_y = 0
-missile_vel_x = -10
-missile_vel_y = -10
 missile_first_pos_x = rocket_x
 missile_fisrt_pos_y = rocket_y
 missile_mod_pos_x = 0
@@ -135,11 +149,11 @@ def animate_missile():
 # ミサイルのグラフィック
 missile_img = tk.PhotoImage(file="missile.png")
 missile = None # Nilもこういうことだったのか．．．
-arrow = None
+#arrow = None
 isCollision = None
 # スペースキーを押すとミサイルを発射
 def on_space_key(event):
-    global missile_first_pos_x,missile_fisrt_pos_y,missile_pos_x,missile_pos_y, missile, missile_vel_x,missile_vel_y, missile_mod_pos_x,missile_mod_pos_y,arrow,isCollision
+    global missile_mod_vel_x,missile_mod_vel_y,missile_first_pos_x,missile_fisrt_pos_y,missile_pos_x,missile_pos_y, missile, missile_vel_x,missile_vel_y, missile_mod_pos_x,missile_mod_pos_y,arrow,isCollision
     if event.keysym == "space" and flag_input:
         missile_pos_x = rocket_x
         missile_pos_y = rocket_y
@@ -147,19 +161,21 @@ def on_space_key(event):
         missile_fisrt_pos_y = rocket_y
         missile_mod_pos_x = rocket_x
         missile_mod_pos_y = rocket_y
-        missile_vel_x = 60
-        missile_vel_y = 0
+        missile_mod_vel_x = missile_vel_x
+        missile_mod_vel_y = missile_vel_y
         isCollision = False
         missile = canvas.create_image(missile_first_pos_x, missile_fisrt_pos_y,image=missile_img, tag="m1")
-        arrow = canvas.create_line(missile_first_pos_x,missile_fisrt_pos_y,missile_first_pos_x+missile_vel_x,missile_fisrt_pos_y+missile_vel_y,arrow=tk.LAST,fill="red", width=5)
+        #arrow = canvas.create_line(missile_first_pos_x,missile_fisrt_pos_y,missile_first_pos_x+missile_vel_x,missile_fisrt_pos_y+missile_vel_y,arrow=tk.LAST,fill="red", width=5)
 
 # ミサイルアニメーションを停止
 def stop_missile_animation():
-    global missile,arrow,flag_input
+    global missile,arrow,flag_input,missile_vel_y,missile_vel_x
     canvas.delete("m1")
     missile = None
-    canvas.delete(arrow)
-    arrow = None
+    #canvas.delete(arrow)
+    #arrow = None
+    missile_vel_x = missile_mod_vel_x
+    missile_vel_y = missile_mod_vel_y
     flag_input = True
 
 def is_tagged_canvas_present(canvas, tag):

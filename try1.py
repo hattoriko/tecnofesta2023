@@ -2,25 +2,18 @@ import math
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-# うえ の えいせい にかんする せってい
 missile_pos_x = 0
 missile_pos_y = 0
 missile_vel_x = 0
-missile_vel_y = 5
-# した の えいせい にかんする せってい
-missile_pos_x2 = 0
-missile_pos_y2 = 0
-missile_vel_x2 = 0
-missile_vel_y2 = -5
+missile_vel_y = -10
 
 # 重力定数 
-mu_scl = 3.986E+14
-R_scl = 6.8E+6
-Omega_scl = math.sqrt(mu_scl / R_scl / R_scl / R_scl)
+Omega_scl = 2 * math.pi /6
+R = 5
 
 def calculate_acceleration(position, velocity):
-    ax = 2.0 * Omega_scl * velocity[1]
-    ay = -2.0 * Omega_scl * velocity[0] + 3.0 * Omega_scl * Omega_scl * position[1]
+    ax = 2.0 * Omega_scl * velocity[1] + Omega_scl * Omega_scl * position[0]
+    ay = -2.0 * Omega_scl * velocity[0] + Omega_scl * Omega_scl * (position[1] + R)
     return [ax, ay]
 
 def runge_kutta(h, position, velocity):
@@ -38,44 +31,40 @@ def runge_kutta(h, position, velocity):
 
     return new_position, new_velocity
 
-def calculate_missile_trajectory():
-    global missile_pos_x, missile_pos_y, missile_vel_x, missile_vel_y,missile_pos_x2,missile_pos_y2,missile_vel_x2,missile_vel_y2
-    h = 0.1
-    [missile_pos_x, missile_pos_y], [missile_vel_x, missile_vel_y] = runge_kutta(h, [missile_pos_x, missile_pos_y], [missile_vel_x, missile_vel_y])
-    [missile_pos_x2, missile_pos_y2], [missile_vel_x2, missile_vel_y2] = runge_kutta(h, [missile_pos_x2, missile_pos_y2], [missile_vel_x2, missile_vel_y2])
+def calculate_missile_trajectory(i):
+    global missile_pos_x, missile_pos_y, missile_vel_x, missile_vel_y
+    h = 0.01
+    [missile_pos_x, missile_pos_y], [missile_vel_x, missile_vel_y] = runge_kutta(h, [missile_pos_x, missile_pos_y],
+                                                                                   [missile_vel_x, missile_vel_y])
+    print(missile_pos_x, missile_pos_y)
 
+    if i == 200:  # 300フレーム後に停止
+        ani.event_source.stop()
 
 # アニメーション用のフレームを初期化
 fig, ax = plt.subplots()
 x_data, y_data = [], []
-x_data2, y_data2 = [], []
 line, = ax.plot([], [], lw=2)
-line2, = ax.plot([], [], lw=2)
 
 def init():
     line.set_data([], [])
-    line2.set_data([], [])
-    return line,line2
+    return line,
 
 def animate(i):
-    calculate_missile_trajectory()
+    calculate_missile_trajectory(i)
     x_data.append(missile_pos_x)
     y_data.append(missile_pos_y)
-    x_data2.append(missile_pos_x2)
-    y_data2.append(missile_pos_y2)
     line.set_data(x_data, y_data)
-    line2.set_data(x_data2, y_data2)
-    return line,line2
+    return line,
 
 # アニメーションを作成
-ani = FuncAnimation(fig, animate, init_func=init, frames=1000, interval=0.01, blit=True)
+ani = FuncAnimation(fig, animate, init_func=init, frames=1000, interval=10, blit=True)
 
 # プロットの設定
-plt.xlim(-2000, 2000)
-plt.ylim(-2000, 2000)
+plt.xlim(-10, 10)
+plt.ylim(-10, 10)
 plt.xlabel('axis x')
 plt.ylabel('axis y')
-plt.title('Tether Satellite')
 
 # アニメーションを表示
 plt.show()
